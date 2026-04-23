@@ -24,7 +24,7 @@ import (
 
 func main() {
 	if len(os.Args) < 3 || os.Args[1] == "--help" {
-		_, _ = fmt.Fprintln(os.Stderr, "usage: hasher algo path\n")
+		_, _ = fmt.Fprintln(os.Stderr, "usage: hasher algo path")
 
 		for _, algo := range hashes.Algorithms {
 			_, _ = fmt.Fprintln(os.Stderr, algo)
