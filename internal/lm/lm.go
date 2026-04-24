@@ -58,7 +58,11 @@ func (h *LM) Write(b []byte) (n int, err error) {
 	return len(b), nil
 }
 
-func (h *LM) Sum(_ []byte) []byte {
+func (h *LM) Sum(b []byte) []byte {
+	if len(b) > 0 {
+		_, _ = h.Write(b)
+	}
+
 	return h.sum
 }
 

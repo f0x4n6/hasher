@@ -1,12 +1,9 @@
 package shake
 
-import (
-	"crypto/sha3"
-)
+import "crypto/sha3"
 
 type Shake struct {
 	sha3.SHAKE
-
 	size int
 }
 

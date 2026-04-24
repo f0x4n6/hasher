@@ -1,6 +1,6 @@
 package imports
 
-var imports = map[string]map[uint32]string{
+var Ordinals = map[string]map[uint32]string{
 	"advapi32": {
 		1002: "a_shafinal",
 		1003: "a_shainit",

@@ -1,20 +1,23 @@
-package hashes
+package hash
 
 import (
 	"io"
+	"log"
 	"os"
 	"path/filepath"
 	"testing"
 )
 
-var (
-	txt = filepath.Join("..", "testdata", "test.txt")
-	jpg = filepath.Join("..", "testdata", "test.jpg")
-)
-
 func TestSum(t *testing.T) {
+	var (
+		exe = fixture("test.exe")
+		jpg = fixture("test.jpg")
+		txt = fixture("test.txt")
+		str = []byte("password")
+	)
+
 	for _, tt := range []struct {
-		path string
+		data []byte
 		algo string
 		sum  string
 	}{
@@ -40,6 +43,10 @@ func TestSum(t *testing.T) {
 		{txt, GOST2012256, "cf2901c0cc7f2c921fad71154b463cdb4154ee0ff249dba7a27dd42094a69ace"},
 		{txt, GOST2012512, "6d01466a29c29857ceac22e32573509f870a22c10f5bf31687a9e2356993692cdccd36df88c84becc3f9babfc9018dd020c70c68c9af6823f4c72695339dfac0"},
 		{txt, HAS160, "e33a300c13e74a0c6bdedf0355bf14bea50399ac"},
+		{exe, IMPFUZZY, "3:snMO/I/6l:oZ/Iil"},
+		{exe, IMPHASH, "23285270545de4353386c2c1c9ed45a4"},
+		{exe, IMPHASH0, "23285270545de4353386c2c1c9ed45a4"},
+		{str, LM, "e52cac67419a9a224a3b108f3fa6cb6d"},
 		{txt, LSH256, "ea81e0399313b58aa11ad06b1eb6d7beb3221d8e4a3c2fb3535b554d80865680"},
 		{txt, LSH512, "c2a91ed0eff71b972c7dd8bc0d0b0e2191e81c518a90796ae57f86bac382a6accb96c8c24911e1bc816cafc685ce3e118ecd2a1998bd0c912141db63b10d9e1b"},
 		{jpg, MARRHILDRETH, "8a24ad3c465f86a569e17865e8e499e2d1c6d2687591bdd3a9d5cd472d768b0c52bb89105d41d51945a478731f2c31b95f2975e2c6782c705ac41229d45549fc874e74c155ac47b6"},
@@ -49,6 +56,7 @@ func TestSum(t *testing.T) {
 		{txt, MD6, "7abba14b23ea4438d2009118fe9d1befed73ba7420b5b7952fa8cd3c1a6ce62a"},
 		{jpg, MEDIAN, "000000f83eb6feff"},
 		{txt, MURMUR3, "f0fb0f9c9956af18"},
+		{str, NT, "8846f7eaee8fb117ad06bdd830b7586c"},
 		{jpg, PDQ, "d9a23c5fa4c9c9f23b1bc7a0c932325f54a8f3047255332cc8d4f5a86655bb47"},
 		{jpg, PHASH, "d93ea5ca3bd6c93a"},
 		{txt, RAPIDHASH, "0baa2da0a5631317"},
@@ -79,44 +87,32 @@ func TestSum(t *testing.T) {
 		{txt, XXH64, "6047f571a76ec9bb"},
 	} {
 		t.Run(tt.algo, func(t *testing.T) {
-			buf, err := fixture(tt.path)
-
-			if err != nil {
-				t.Fatalf("Sum: %v", err)
-			}
-
-			sum, err := Sum(tt.algo, buf)
+			sum, err := Sum(tt.algo, tt.data)
 
 			if err != nil {
 				t.Errorf("Sum: %v", err)
 			}
 
 			if sum != tt.sum {
-				t.Error("sum wrong")
+				t.Error("sum mismatch:", sum)
 			}
 		})
 	}
 }
 
 func BenchmarkSum(b *testing.B) {
-	buf, err := fixture(txt)
-
-	if err != nil {
-		b.Fatalf("Sum: %v", err)
-	}
-
-	b.ResetTimer()
+	buf := []byte("The quick brown fox jumps over the lazy dog")
 
 	for b.Loop() {
 		_, _ = Sum(SHA256, buf)
 	}
 }
 
-func fixture(path string) ([]byte, error) {
-	f, err := os.Open(path)
+func fixture(file string) []byte {
+	f, err := os.Open(filepath.Join("..", "testdata", file))
 
 	if err != nil {
-		return nil, err
+		log.Fatalf("fixture: %v", err)
 	}
 
 	defer func() {
@@ -126,8 +122,8 @@ func fixture(path string) ([]byte, error) {
 	b, err := io.ReadAll(f)
 
 	if err != nil {
-		return nil, err
+		log.Fatalf("fixture: %v", err)
 	}
 
-	return b, nil
+	return b
 }

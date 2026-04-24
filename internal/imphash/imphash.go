@@ -1,10 +1,12 @@
-// Package imports based on https://github.com/omarghader/pefile-go/blob/master/pe/pe.go
-package imports
+// Package imphash based on https://github.com/omarghader/pefile-go/blob/master/pe/pe.go
+package imphash
 
 import (
 	"crypto/md5"
 	"hash"
 	"strings"
+
+	"go.foxforensics.dev/hasher/internal/imports"
 )
 
 type ImpHash struct {
@@ -12,12 +14,12 @@ type ImpHash struct {
 	buf  []string
 }
 
-func New() hash.Hash {
-	return &ImpHash{sort: false}
+func NewSorted() hash.Hash {
+	return &ImpHash{sort: true}
 }
 
-func NewStable() hash.Hash {
-	return &ImpHash{sort: true}
+func NewUnsorted() hash.Hash {
+	return &ImpHash{sort: false}
 }
 
 func (h *ImpHash) BlockSize() int {
@@ -33,9 +35,15 @@ func (h *ImpHash) Reset() {
 }
 
 func (h *ImpHash) Write(b []byte) (n int, err error) {
-	h.buf, err = GetImports(b, h.sort)
+	v, err := imports.GetImports(b, h.sort)
 
-	return len(b), err
+	if err != nil {
+		return 0, err
+	}
+
+	h.buf = append(h.buf, v...)
+
+	return len(b), nil
 
 }
 

@@ -47,10 +47,13 @@ func (h *Kermit) Write(b []byte) (n int, err error) {
 	return len(b), nil
 }
 
-func (h *Kermit) Sum(_ []byte) []byte {
-	b := make([]byte, size)
+func (h *Kermit) Sum(b []byte) []byte {
+	if len(b) > 0 {
+		_, _ = h.Write(b)
+	}
 
-	binary.LittleEndian.PutUint16(b, h.sum)
+	v := make([]byte, size)
+	binary.LittleEndian.PutUint16(v, h.sum)
 
-	return b
+	return v
 }

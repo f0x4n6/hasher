@@ -1,15 +1,12 @@
 package imports
 
 import (
-	"errors"
 	"fmt"
 	"slices"
 	"strings"
 
 	"github.com/saferwall/pe"
 )
-
-var ErrNotSupported = errors.New("file type not supported")
 
 func Lookup(dll string, ord uint32) string {
 	// lookup library imports
@@ -20,7 +17,7 @@ func Lookup(dll string, ord uint32) string {
 	}
 
 	// lookup additional imports
-	if m, ok := imports[dll]; ok {
+	if m, ok := Ordinals[dll]; ok {
 		if v, ok = m[ord]; ok {
 			return v
 		}
@@ -30,13 +27,9 @@ func Lookup(dll string, ord uint32) string {
 }
 
 func GetImports(b []byte, sort bool) ([]string, error) {
-	var imp []string
+	var imps []string
 
-	if string(b[:2]) == "MZ" {
-		return imp, ErrNotSupported
-	}
-
-	p, err := pe.NewBytes(b, &pe.Options{
+	f, err := pe.NewBytes(b, &pe.Options{
 		DisableCertValidation:      true,
 		DisableSignatureValidation: true,
 		OmitExportDirectory:        true,
@@ -55,42 +48,42 @@ func GetImports(b []byte, sort bool) ([]string, error) {
 	})
 
 	if err != nil {
-		return imp, err
+		return imps, err
 	}
 
 	defer func(f *pe.File) {
 		_ = f.Close()
-	}(p)
+	}(f)
 
-	err = p.Parse()
+	err = f.Parse()
 
 	if err != nil {
-		return imp, err
+		return imps, err
 	}
 
 	rep := strings.NewReplacer(".dll", "", ".ocx", "", ".sys", "")
 
-	for _, i := range p.Imports {
-		buf := make([]string, 0, len(i.Functions))
+	for _, imp := range f.Imports {
+		buf := make([]string, 0, len(imp.Functions))
 
-		dll := rep.Replace(strings.ToLower(i.Name))
+		dll := rep.Replace(strings.ToLower(imp.Name))
 
-		for _, f := range i.Functions {
-			n := strings.ToLower(f.Name)
+		for _, fn := range imp.Functions {
+			name := strings.ToLower(fn.Name)
 
-			if len(f.Name) == 0 {
-				n = Lookup(i.Name, f.Ordinal)
+			if len(fn.Name) == 0 {
+				name = Lookup(imp.Name, fn.Ordinal)
 			}
 
-			buf = append(buf, fmt.Sprintf("%s.%s", dll, n))
+			buf = append(buf, fmt.Sprintf("%s.%s", dll, name))
 		}
 
 		if sort {
 			slices.Sort(buf)
 		}
 
-		imp = append(imp, buf...)
+		imps = append(imps, buf...)
 	}
 
-	return imp, nil
+	return imps, nil
 }

@@ -88,7 +88,11 @@ func (h *Hash) Write(b []byte) (n int, err error) {
 	return len(b), nil
 }
 
-func (h *Hash) Sum(_ []byte) []byte {
+func (h *Hash) Sum(b []byte) []byte {
+	if len(b) > 0 {
+		_, _ = h.Write(b)
+	}
+
 	if v, ok := h.sum.(imghash.Binary); ok {
 		return v
 	}

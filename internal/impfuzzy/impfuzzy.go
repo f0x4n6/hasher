@@ -1,4 +1,4 @@
-package imports
+package impfuzzy
 
 import (
 	"hash"
@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"github.com/glaslos/ssdeep"
+	"go.foxforensics.dev/hasher/internal/imports"
 )
 
 type ImpFuzzy struct {
@@ -29,9 +30,15 @@ func (h *ImpFuzzy) Reset() {
 }
 
 func (h *ImpFuzzy) Write(b []byte) (n int, err error) {
-	h.buf, err = fuzzy.GetImports(b, false)
+	v, err := imports.GetImports(b, false)
 
-	return len(b), err
+	if err != nil {
+		return 0, err
+	}
+
+	h.buf = append(h.buf, v...)
+
+	return len(b), nil
 }
 
 func (h *ImpFuzzy) Sum(_ []byte) []byte {

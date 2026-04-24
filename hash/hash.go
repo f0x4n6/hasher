@@ -1,4 +1,4 @@
-package hashes
+package hash
 
 import (
 	"crypto/md5"
@@ -34,7 +34,8 @@ import (
 	"go.foxforensics.dev/hasher/internal/blake3"
 	"go.foxforensics.dev/hasher/internal/djb2"
 	"go.foxforensics.dev/hasher/internal/image"
-	"go.foxforensics.dev/hasher/internal/imports"
+	"go.foxforensics.dev/hasher/internal/impfuzzy"
+	"go.foxforensics.dev/hasher/internal/imphash"
 	"go.foxforensics.dev/hasher/internal/kermit"
 	"go.foxforensics.dev/hasher/internal/lm"
 	"go.foxforensics.dev/hasher/internal/nt"
@@ -190,164 +191,178 @@ var Algorithms = []string{
 	XXH64,
 }
 
-// ErrAlgorithmNotSupported for unknown algorithms
-var ErrAlgorithmNotSupported = errors.New("algorithm not supported")
+// NotSupported if algorithm is unknown
+var NotSupported = errors.New("algorithm not supported")
 
-// Sum returns the hash sum of the given data using the given algorithm.
+// MustSum returns only the hash sum.
+func MustSum(algo string, data []byte) string {
+	sum, err := Sum(algo, data)
+
+	if err != nil {
+		return ""
+	}
+
+	return sum
+}
+
+// Sum returns the hash sum and any errors.
 func Sum(algo string, data []byte) (string, error) {
-	var imp hash.Hash
-
 	ssdeep.Force = true
 
+	var h hash.Hash
+
+	// this list kills our cyclomatic complexity!
 	switch strings.ToLower(algo) {
 	case ADLER32:
-		imp = adler32.New()
+		h = adler32.New()
 	case AVERAGE:
-		imp = image.New(image.Average)
+		h = image.New(image.Average)
 	case BLAKE2B256:
-		imp, _ = blake2b.New256(nil)
+		h, _ = blake2b.New256(nil)
 	case BLAKE2B384:
-		imp, _ = blake2b.New384(nil)
+		h, _ = blake2b.New384(nil)
 	case BLAKE2B512:
-		imp, _ = blake2b.New512(nil)
+		h, _ = blake2b.New512(nil)
 	case BLAKE2S256:
-		imp, _ = blake2s.New256(nil)
+		h, _ = blake2s.New256(nil)
 	case BLAKE3256:
-		imp = blake3.New256()
+		h = blake3.New256()
 	case BLAKE3512:
-		imp = blake3.New512()
+		h = blake3.New512()
 	case BLOCKMEAN:
-		imp = image.New(image.BlockMean)
+		h = image.New(image.BlockMean)
 	case CRC16CCITT:
-		imp = kermit.New()
+		h = kermit.New()
 	case CRC32C:
-		imp = crc32.New(crc32.MakeTable(crc32.Castagnoli))
+		h = crc32.New(crc32.MakeTable(crc32.Castagnoli))
 	case CRC32IEEE:
-		imp = crc32.NewIEEE()
+		h = crc32.NewIEEE()
 	case CRC64ECMA:
-		imp = crc64.New(crc64.MakeTable(crc64.ECMA))
+		h = crc64.New(crc64.MakeTable(crc64.ECMA))
 	case CRC64ISO:
-		imp = crc64.New(crc64.MakeTable(crc64.ISO))
+		h = crc64.New(crc64.MakeTable(crc64.ISO))
 	case DIFFERENCE:
-		imp = image.New(image.Difference)
+		h = image.New(image.Difference)
 	case DJB2:
-		imp = djb2.New()
+		h = djb2.New()
 	case FLETCHER4:
-		imp = fletcher4.New()
+		h = fletcher4.New()
 	case FNV1:
-		imp = fnv.New128()
+		h = fnv.New128()
 	case FNV1A:
-		imp = fnv.New128a()
+		h = fnv.New128a()
 	case GOST2012256, STREEBOG256:
-		imp = streebog.New256()
+		h = streebog.New256()
 	case GOST2012512, STREEBOG512:
-		imp = streebog.New512()
+		h = streebog.New512()
 	case HAS160:
-		imp = has160.New()
+		h = has160.New()
 	case IMPFUZZY:
-		imp = imports.New()
+		h = impfuzzy.New()
 	case IMPHASH:
-		imp = imports.New()
+		h = imphash.NewUnsorted()
 	case IMPHASH0:
-		imp = imports.NewStable()
+		h = imphash.NewSorted()
 	case LM:
-		imp = lm.New()
+		h = lm.New()
 	case LSH256:
-		imp = lsh256.New()
+		h = lsh256.New()
 	case LSH512:
-		imp = lsh512.New()
+		h = lsh512.New()
 	case MARRHILDRETH:
-		imp = image.New(image.MarrHildreth)
+		h = image.New(image.MarrHildreth)
 	case MD2:
-		imp = md2.New()
+		h = md2.New()
 	case MD4:
-		imp = md4.New()
+		h = md4.New()
 	case MD5:
-		imp = md5.New()
+		h = md5.New()
 	case MD6:
-		imp = md6.New256()
+		h = md6.New256()
 	case MEDIAN:
-		imp = image.New(image.Median)
+		h = image.New(image.Median)
 	case MURMUR3:
-		imp = murmur3.New64() // Murmur3f
+		h = murmur3.New64() // Murmur3f
 	case NT:
-		imp = nt.New()
+		h = nt.New()
 	case PDQ:
-		imp = image.New(image.PDQ)
+		h = image.New(image.PDQ)
 	case PE:
-		imp = pe.New()
+		h = pe.New()
 	case PHASH:
-		imp = image.New(image.PHash)
+		h = image.New(image.PHash)
 	case RAPIDHASH:
-		imp = rapidhash.New()
+		h = rapidhash.New()
 	case RASH:
-		imp = image.New(image.RASH)
+		h = image.New(image.RASH)
 	case RIPEMD160:
-		imp = ripemd160.New()
+		h = ripemd160.New()
 	case SHA1:
-		imp = sha1.New()
+		h = sha1.New()
 	case SHA224:
-		imp = sha256.New224()
+		h = sha256.New224()
 	case SHA256:
-		imp = sha256.New()
+		h = sha256.New()
 	case SHA512:
-		imp = sha512.New()
+		h = sha512.New()
 	case SHA3:
 		fallthrough
 	case SHA3224:
-		imp = sha3.New224()
+		h = sha3.New224()
 	case SHA3256:
-		imp = sha3.New256()
+		h = sha3.New256()
 	case SHA3384:
-		imp = sha3.New384()
+		h = sha3.New384()
 	case SHA3512:
-		imp = sha3.New512()
+		h = sha3.New512()
 	case SHAKE128:
-		imp = shake.New128()
+		h = shake.New128()
 	case SHAKE256:
-		imp = shake.New256()
+		h = shake.New256()
 	case SIPHASH:
-		imp = siphash.New(make([]byte, 16)) // SipHash-2-4 with zero key
+		h = siphash.New(make([]byte, 16)) // SipHash-2-4 with zero key
 	case SKEIN224:
-		imp = skein.NewHash224()
+		h = skein.NewHash224()
 	case SKEIN256:
-		imp = skein.NewHash256()
+		h = skein.NewHash256()
 	case SKEIN384:
-		imp = skein.NewHash384()
+		h = skein.NewHash384()
 	case SKEIN512:
-		imp = skein.NewHash512()
+		h = skein.NewHash512()
 	case SM3:
-		imp = sm3.New()
+		h = sm3.New()
 	case SSDEEP:
-		imp = ssdeep.New()
+		h = ssdeep.New()
 	case TLSH:
-		imp = tlsh.New()
+		h = tlsh.New()
 	case WHASH:
-		imp = image.New(image.WHash)
+		h = image.New(image.WHash)
 	case WHIRLPOOL:
-		imp = whirlpool.New()
+		h = whirlpool.New()
 	case XXH3:
-		imp = xxh3.New()
+		h = xxh3.New()
 	case XXH32:
-		imp = xxh.New()
+		h = xxh.New()
 	case XXH64:
-		imp = xxhash.New()
+		h = xxhash.New()
 	default:
-		return "", ErrAlgorithmNotSupported
+		return "", NotSupported
 	}
 
-	imp.Reset()
+	// reset is needed for some implementations
+	h.Reset()
 
-	if _, err := imp.Write(data); err != nil {
+	if _, err := h.Write(data); err != nil {
 		return "", err
 	}
 
+	// special formating for some hashes
 	switch algo {
 	case SSDEEP, IMPFUZZY:
-		return fmt.Sprintf("%s", imp.Sum(nil)), nil
+		return fmt.Sprintf("%s", h.Sum(nil)), nil
 	case TLSH:
-		return fmt.Sprintf("T1%x", imp.Sum(nil)), nil
+		return fmt.Sprintf("T1%x", h.Sum(nil)), nil
 	default:
-		return fmt.Sprintf("%x", imp.Sum(nil)), nil
+		return fmt.Sprintf("%x", h.Sum(nil)), nil
 	}
 }

@@ -12,7 +12,7 @@ const (
 )
 
 type PE struct {
-	sum uint32
+	sum uint64
 }
 
 func New() hash.Hash {
@@ -32,7 +32,6 @@ func (h *PE) Reset() {
 }
 
 func (h *PE) Write(b []byte) (n int, err error) {
-	var sum uint64
 	var blk uint32
 
 	r := uint32(len(b)) % 4
@@ -45,27 +44,28 @@ func (h *PE) Write(b []byte) (n int, err error) {
 
 	for i := uint64(0); i < uint64(l); i += 4 {
 		blk = binary.LittleEndian.Uint32(b[i:])
-		sum = (sum & 0xffffffff) + uint64(blk) + (sum >> 32)
+		h.sum = (h.sum & 0xffffffff) + uint64(blk) + (h.sum >> 32)
 
-		if sum > 0x100000000 {
-			sum = (sum & 0xffffffff) + (sum >> 32)
+		if h.sum > 0x100000000 {
+			h.sum = (h.sum & 0xffffffff) + (h.sum >> 32)
 		}
 	}
 
-	sum = (sum & 0xffff) + (sum >> 16)
-	sum = sum + (sum >> 16)
-	sum = sum & 0xffff
-	sum += uint64(l)
-
-	h.sum = uint32(sum)
+	h.sum = (h.sum & 0xffff) + (h.sum >> 16)
+	h.sum = h.sum + (h.sum >> 16)
+	h.sum = h.sum & 0xffff
+	h.sum += uint64(l)
 
 	return len(b), nil
 }
 
-func (h *PE) Sum(_ []byte) []byte {
-	b := make([]byte, size)
+func (h *PE) Sum(b []byte) []byte {
+	if len(b) > 0 {
+		_, _ = h.Write(b)
+	}
 
-	binary.LittleEndian.PutUint32(b, h.sum)
+	v := make([]byte, size)
+	binary.LittleEndian.PutUint32(v, uint32(h.sum))
 
-	return b
+	return v
 }

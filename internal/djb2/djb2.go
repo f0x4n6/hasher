@@ -39,10 +39,13 @@ func (h *Djb2) Write(b []byte) (n int, err error) {
 	return len(b), nil
 }
 
-func (h *Djb2) Sum(_ []byte) []byte {
-	b := make([]byte, size)
+func (h *Djb2) Sum(b []byte) []byte {
+	if len(b) > 0 {
+		_, _ = h.Write(b)
+	}
 
-	binary.LittleEndian.PutUint64(b, h.sum)
+	v := make([]byte, size)
+	binary.LittleEndian.PutUint64(v, h.sum)
 
-	return b
+	return v
 }

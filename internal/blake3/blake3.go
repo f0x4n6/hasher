@@ -4,7 +4,6 @@ import "github.com/zeebo/blake3"
 
 type Blake3 struct {
 	blake3.Hasher
-
 	size int
 }
 

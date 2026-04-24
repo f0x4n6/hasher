@@ -1,4 +1,4 @@
-// Multi-algorithm hasher supporting cryptographic, performance, perceptual and similarity hashes, as well as different checksums.
+// Multi-algorithm hasher supporting cryptographic, performance, perceptual and similarity hashes.
 //
 // Usage:
 //
@@ -17,19 +17,16 @@ import (
 	"io/fs"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"go.foxforensics.dev/go-mmap"
-	"go.foxforensics.dev/hasher/hashes"
+	"go.foxforensics.dev/hasher/hash"
 )
 
 func main() {
 	if len(os.Args) < 3 || os.Args[1] == "--help" {
-		_, _ = fmt.Fprintln(os.Stderr, "usage: hasher algo path")
-
-		for _, algo := range hashes.Algorithms {
-			_, _ = fmt.Fprintln(os.Stderr, algo)
-		}
-
+		_, _ = fmt.Fprintln(os.Stderr, "usage: hasher algo path\n--")
+		_, _ = fmt.Fprintln(os.Stderr, strings.Join(hash.Algorithms, ", "))
 		os.Exit(2)
 	}
 
@@ -68,7 +65,7 @@ func main() {
 
 		defer func() { _ = m.Unmap() }()
 
-		s, err := hashes.Sum(os.Args[1], m)
+		s, err := hash.Sum(os.Args[1], m)
 
 		if err != nil {
 			_, _ = fmt.Fprintln(os.Stderr, err)
