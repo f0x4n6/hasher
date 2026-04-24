@@ -34,7 +34,11 @@ import (
 	"go.foxforensics.dev/hasher/internal/blake3"
 	"go.foxforensics.dev/hasher/internal/djb2"
 	"go.foxforensics.dev/hasher/internal/image"
+	"go.foxforensics.dev/hasher/internal/imports"
 	"go.foxforensics.dev/hasher/internal/kermit"
+	"go.foxforensics.dev/hasher/internal/lm"
+	"go.foxforensics.dev/hasher/internal/nt"
+	"go.foxforensics.dev/hasher/internal/pe"
 	"go.foxforensics.dev/hasher/internal/shake"
 	"go.foxforensics.dev/hasher/internal/xxh"
 	"go.solidsystem.no/fletcher4"
@@ -67,6 +71,10 @@ const (
 	GOST2012256  = "gost-256"
 	GOST2012512  = "gost-512"
 	HAS160       = "has-160"
+	IMPFUZZY     = "impfuzzy"
+	IMPHASH      = "imphash"
+	IMPHASH0     = "imphash0"
+	LM           = "lm"
 	LSH256       = "lsh-256"
 	LSH512       = "lsh-512"
 	MARRHILDRETH = "marrhildreth"
@@ -76,7 +84,9 @@ const (
 	MD6          = "md6"
 	MEDIAN       = "median"
 	MURMUR3      = "murmur3"
+	NT           = "nt"
 	PDQ          = "pdq"
+	PE           = "pe"
 	PHASH        = "phash"
 	RAPIDHASH    = "rapidhash"
 	RASH         = "rash"
@@ -133,6 +143,10 @@ var Algorithms = []string{
 	GOST2012256,
 	GOST2012512,
 	HAS160,
+	IMPFUZZY,
+	IMPHASH,
+	IMPHASH0,
+	LM,
 	LSH256,
 	LSH512,
 	MARRHILDRETH,
@@ -142,7 +156,9 @@ var Algorithms = []string{
 	MD6,
 	MEDIAN,
 	MURMUR3,
+	NT,
 	PDQ,
+	PE,
 	PHASH,
 	RAPIDHASH,
 	RASH,
@@ -228,6 +244,14 @@ func Sum(algo string, data []byte) (string, error) {
 		imp = streebog.New512()
 	case HAS160:
 		imp = has160.New()
+	case IMPFUZZY:
+		imp = imports.New()
+	case IMPHASH:
+		imp = imports.New()
+	case IMPHASH0:
+		imp = imports.NewStable()
+	case LM:
+		imp = lm.New()
 	case LSH256:
 		imp = lsh256.New()
 	case LSH512:
@@ -246,8 +270,12 @@ func Sum(algo string, data []byte) (string, error) {
 		imp = image.New(image.Median)
 	case MURMUR3:
 		imp = murmur3.New64() // Murmur3f
+	case NT:
+		imp = nt.New()
 	case PDQ:
 		imp = image.New(image.PDQ)
+	case PE:
+		imp = pe.New()
 	case PHASH:
 		imp = image.New(image.PHash)
 	case RAPIDHASH:
@@ -315,7 +343,7 @@ func Sum(algo string, data []byte) (string, error) {
 	}
 
 	switch algo {
-	case SSDEEP:
+	case SSDEEP, IMPFUZZY:
 		return fmt.Sprintf("%s", imp.Sum(nil)), nil
 	case TLSH:
 		return fmt.Sprintf("T1%x", imp.Sum(nil)), nil

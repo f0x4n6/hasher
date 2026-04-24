@@ -1,5 +1,5 @@
 # hasher
-Multi-algorithm hasher supporting cryptographic, performance and perceptual hashes, as well as different checksums.
+Multi-algorithm hasher supporting cryptographic, performance, perceptual and similarity hashes, as well as different checksums.
 
 ```console
 go install go.foxforensics.dev/hasher@latest
@@ -19,6 +19,12 @@ Performance hashes:
 
 Perceptual hashes:
 > Average, Difference, Median, PHash, WHash, MarrHildreth, BlockMean, PDQ, RASH
+
+Similarity hashes:
+> ImpFuzzy, ImpHash, ImpHash0, SSDeep, TLSH
+
+Windows hashes:
+> LM, NT, PE
 
 Checksums:
 > Adler32, Fletcher4, CRC16-CCITT, CRC32-C, CRC32-IEEE, CRC64-ECMA, CRC64-ISO

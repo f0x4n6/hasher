@@ -1,4 +1,4 @@
-// Multi-algorithm hasher supporting cryptographic, performance and perceptual hashes, as well as different checksums.
+// Multi-algorithm hasher supporting cryptographic, performance, perceptual and similarity hashes, as well as different checksums.
 //
 // Usage:
 //
