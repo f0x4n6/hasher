@@ -58,6 +58,7 @@ func TestSum(t *testing.T) {
 		{txt, MURMUR3, "f0fb0f9c9956af18"},
 		{str, NT, "8846f7eaee8fb117ad06bdd830b7586c"},
 		{jpg, PDQ, "d9a23c5fa4c9c9f23b1bc7a0c932325f54a8f3047255332cc8d4f5a86655bb47"},
+		{exe, PE, "ef780000"},
 		{jpg, PHASH, "d93ea5ca3bd6c93a"},
 		{txt, RAPIDHASH, "0baa2da0a5631317"},
 		{jpg, RASH, "bfe01f04001f0dfe"},
